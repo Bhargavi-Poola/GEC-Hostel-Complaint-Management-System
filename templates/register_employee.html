@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ role|title }} Registration - GEC Hostel Management{% endblock %}
+{% block content %}
+<div class="container py-5"><div class="row justify-content-center"><div class="col-md-7 col-lg-6">
+<div class="card shadow border-0"><div class="card-header bg-primary text-white text-center py-3"><h3>{{ role|title }} Registration</h3><p class="mb-0">Your account requires admin approval</p></div><div class="card-body p-4">
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ 'danger' if category == 'error' else category }}">{{ message }}</div>{% endfor %}{% endwith %}
+<form method="post">
+<div class="mb-3"><label class="form-label">Full name</label><input class="form-control" name="name" required maxlength="100"></div>
+<div class="mb-3"><label class="form-label">Username / Employee ID</label><input class="form-control" name="username" required minlength="4" maxlength="30" autocomplete="username"><small class="text-muted">Use a unique username; 4-30 letters/numbers/dot/underscore/hyphen.</small></div>
+<div class="mb-3"><label class="form-label">Hostel</label><select class="form-select" name="hostel_type" required><option value="" disabled selected>Select hostel</option><option value="Boys">Boys Hostel</option><option value="Girls">Girls Hostel</option></select></div>
+{% if role == 'staff' %}<div class="mb-3"><label class="form-label">Department</label><select class="form-select" name="department" required><option value="" disabled selected>Select department</option><option>Electrical</option><option>Plumbing</option><option>Cleaning</option><option>Wi-Fi / Network</option></select></div>{% endif %}
+<div class="mb-3"><label class="form-label">Contact number (optional)</label><input class="form-control" name="phone" type="tel" maxlength="20"></div>
+<div class="mb-3"><label class="form-label">Email address (for password recovery)</label><input class="form-control" name="email" type="email" maxlength="254" autocomplete="email" required></div>
+<div class="mb-3"><label class="form-label">Password</label><input class="form-control" type="password" name="password" minlength="6" required autocomplete="new-password"></div>
+<div class="mb-3"><label class="form-label">Confirm password</label><input class="form-control" type="password" name="confirm_password" minlength="6" required autocomplete="new-password"></div>
+<button class="btn btn-primary w-100" type="submit">Submit Registration</button></form>
+<p class="text-center mt-3 mb-0"><a href="{{ url_for('login') }}">Back to Login</a></p></div></div></div></div></div>
+{% endblock %}

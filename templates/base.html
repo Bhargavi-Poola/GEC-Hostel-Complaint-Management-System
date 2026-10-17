@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+        GEC Hostel Management System
+        {% endblock %}
+    </title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_css %}{% endblock %}
+
+</head>
+
+
+<body>
+
+
+<!-- =========================
+     NAVBAR
+========================= -->
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+
+    <div class="container">
+
+        <!-- Brand -->
+
+        <a class="navbar-brand fw-bold"
+           href="{{ url_for('index') }}">
+
+            <i class="bi bi-building-check"></i>
+
+            GEC Hostel Management
+
+        </a>
+
+
+        <!-- Mobile Toggle -->
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+
+        <!-- Navbar Content -->
+
+        <div class="collapse navbar-collapse"
+             id="mainNavbar">
+
+
+            <!-- LEFT SIDE -->
+
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                {% if session.get('role') == 'student' %}
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('student_dashboard') }}">
+
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('raise_complaint') }}">
+
+                            <i class="bi bi-plus-circle"></i>
+                            Raise Complaint
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('student_complaints') }}">
+
+                            <i class="bi bi-list-check"></i>
+                            My Complaints
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('student_fees') }}"><i class="bi bi-wallet2"></i> My Fees</a>
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('student_profile') }}">
+
+                            <i class="bi bi-person-circle"></i>
+                            Profile
+
+                        </a>
+
+                    </li>
+
+
+                {% elif session.get('role') == 'warden' %}
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('warden_dashboard') }}">
+
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('hostel_management') }}"><i class="bi bi-door-open"></i> Rooms & Fees</a></li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('warden_complaints') }}">
+
+                            <i class="bi bi-clipboard-check"></i>
+                            Complaints
+
+                        </a>
+
+                    </li>
+
+
+                {% elif session.get('role') == 'staff' %}
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('staff_dashboard') }}">
+
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('staff_assigned_complaints') }}">
+
+                            <i class="bi bi-tools"></i>
+                            Assigned Complaints
+
+                        </a>
+
+                    </li>
+
+
+                {% elif session.get('role') == 'admin' %}
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('admin_dashboard') }}">
+
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('hostel_management') }}"><i class="bi bi-door-open"></i> Rooms & Fees</a></li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('admin_complaints') }}">
+
+                            <i class="bi bi-clipboard-data"></i>
+                            Complaints
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('admin_reports') }}">
+
+                            <i class="bi bi-bar-chart-line"></i>
+                            Reports
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('admin_staff') }}">
+
+                            <i class="bi bi-people"></i>
+                            Staff
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('admin_wardens') }}">
+
+                            <i class="bi bi-person-badge"></i>
+                            Wardens
+
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+
+            <!-- RIGHT SIDE -->
+
+            <ul class="navbar-nav">
+
+                {% if session.get('user_id') %}
+
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                            <i class="bi bi-bell fs-5"></i>
+                            {% if nav_unread_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ nav_unread_count if nav_unread_count < 100 else '99+' }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 340px;">
+                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            {% if nav_notifications %}
+                                {% for notification in nav_notifications %}
+                                <li>
+                                    <a class="dropdown-item {% if not notification['is_read'] %}fw-semibold bg-light{% endif %}"
+                                       href="{{ url_for('read_notification', notification_id=notification['id']) }}">
+                                        <i class="bi bi-info-circle text-primary me-2"></i>
+                                        {{ notification['message'] }}
+                                        <small class="d-block text-muted mt-1">{{ notification['created_at'] }}</small>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li><span class="dropdown-item-text text-muted">No notifications</span></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center" href="{{ url_for('notifications') }}">View All Notifications</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+
+                        <a class="nav-link dropdown-toggle"
+                           href="#"
+                           role="button"
+                           data-bs-toggle="dropdown">
+
+                            <i class="bi bi-person-circle"></i>
+
+                            {{ session.get('name', 'User') }}
+
+                        </a>
+
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+
+                            {% if session.get('role') == 'student' %}
+
+                            <li>
+
+                                <a class="dropdown-item"
+                                   href="{{ url_for('student_profile') }}">
+
+                                    <i class="bi bi-person"></i>
+                                    Profile
+
+                                </a>
+
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            {% endif %}
+
+
+                            <li>
+
+                                <a class="dropdown-item text-danger"
+                                   href="{{ url_for('logout') }}">
+
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    Logout
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                    </li>
+
+                {% else %}
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('login') }}">
+
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Login
+
+                        </a>
+
+                    </li>
+
+
+                    <li class="nav-item">
+
+                        <a class="nav-link"
+                           href="{{ url_for('register') }}">
+
+                            <i class="bi bi-person-plus"></i>
+                            Register
+
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =========================
+     FLASH MESSAGES
+========================= -->
+
+<div class="container mt-3">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                {% if category == 'error' %}
+
+                    {% set alert_class = 'danger' %}
+
+                {% elif category == 'success' %}
+
+                    {% set alert_class = 'success' %}
+
+                {% elif category == 'warning' %}
+
+                    {% set alert_class = 'warning' %}
+
+                {% else %}
+
+                    {% set alert_class = 'info' %}
+
+                {% endif %}
+
+
+                <div class="alert alert-{{ alert_class }}
+                            alert-dismissible fade show"
+                     role="alert">
+
+                    {% if category == 'success' %}
+
+                        <i class="bi bi-check-circle"></i>
+
+                    {% elif category == 'error' %}
+
+                        <i class="bi bi-exclamation-circle"></i>
+
+                    {% elif category == 'warning' %}
+
+                        <i class="bi bi-exclamation-triangle"></i>
+
+                    {% else %}
+
+                        <i class="bi bi-info-circle"></i>
+
+                    {% endif %}
+
+                    {{ message }}
+
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+</div>
+
+
+
+<!-- =========================
+     MAIN CONTENT
+========================= -->
+
+<main>
+
+    {% block content %}
+
+    {% endblock %}
+
+</main>
+
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer class="footer">
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+            <div class="col-md-6 text-md-start text-center">
+
+                <strong>
+                    <i class="bi bi-building-check"></i>
+                    GEC Hostel Management
+                </strong>
+
+                <p class="mb-0 small">
+                    GEC Hostel Management System
+                </p>
+
+            </div>
+
+
+            <div class="col-md-6 text-md-end text-center mt-3 mt-md-0">
+
+                <small>
+                    © 2026 GEC Hostel Management.
+                    All Rights Reserved.
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+
+<!-- =========================
+     BOOTSTRAP JS
+========================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<!-- Custom JS -->
+
+<script src="{{ url_for('static', filename='js/script.js') }}">
+</script>
+
+
+{% block extra_js %}{% endblock %}
+
+</body>
+
+</html>

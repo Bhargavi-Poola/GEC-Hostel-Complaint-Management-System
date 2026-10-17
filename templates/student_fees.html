@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}My Fees - GEC Hostel{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <h2 class="fw-bold mb-3">My Hostel &amp; Mess Fees</h2>
+
+    <!-- Current Room Allocation -->
+    {% if active %}
+        <div class="alert alert-info">
+            Allocated room: {{ active.hostel_type }} Hostel
+            · Floor {{ active.floor_number }}
+            · Room {{ active.room_number }}
+            · {{ active.room_type }}
+            · Semester rent ₹{{ "%.0f"|format(active.semester_rent) }}
+            · {{ active.semester or 'Current semester' }}
+        </div>
+    {% else %}
+        <div class="alert alert-secondary">
+            A warden has not allocated a room to you yet.
+        </div>
+    {% endif %}
+
+    <!-- Payment Instructions -->
+    <div class="alert alert-info">
+        <strong>Fee Payment Instructions:</strong>
+        Please contact your hostel warden to pay your outstanding
+        hostel or mess fees. Payments will be recorded by the warden
+        after receiving the amount.
+    </div>
+
+    <!-- Calculate Fee Totals -->
+    {% set ns = namespace(
+        hostel_due=0,
+        hostel_paid=0,
+        mess_due=0,
+        mess_paid=0
+    ) %}
+
+    {% for p in hostel_fees %}
+        {% set ns.hostel_due = ns.hostel_due + p.amount_due %}
+        {% set ns.hostel_paid = ns.hostel_paid + p.amount_paid %}
+    {% endfor %}
+
+    {% for p in mess_fees %}
+        {% set ns.mess_due = ns.mess_due + p.amount_due %}
+        {% set ns.mess_paid = ns.mess_paid + p.amount_paid %}
+    {% endfor %}
+
+    <!-- Fee Summary Cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted">Hostel Due</div>
+                    <h4>₹{{ "%.2f"|format(ns.hostel_due) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted">Hostel Paid</div>
+                    <h4>₹{{ "%.2f"|format(ns.hostel_paid) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted">Mess Due</div>
+                    <h4>₹{{ "%.2f"|format(ns.mess_due) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="text-muted">Mess Balance</div>
+                    <h4>
+                        ₹{{ "%.2f"|format(ns.mess_due - ns.mess_paid) }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Room Allocation History -->
+    {% if allocation_history %}
+
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header fw-bold">
+                Room Allocation History by Semester
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-sm mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>Semester</th>
+                            <th>Hostel</th>
+                            <th>Floor</th>
+                            <th>Room</th>
+                            <th>Room type</th>
+                            <th>Allocated</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for a in allocation_history %}
+
+                            <tr>
+                                <td>
+                                    {{ a.semester or 'Semester not recorded' }}
+                                </td>
+
+                                <td>{{ a.hostel_type }}</td>
+                                <td>{{ a.floor_number }}</td>
+                                <td>{{ a.room_number }}</td>
+                                <td>{{ a.room_type }}</td>
+
+                                <td>
+                                    {{ a.allocated_at[:10]
+                                       if a.allocated_at else '—' }}
+                                </td>
+
+                                <td>{{ a.status }}</td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+    {% endif %}
+
+
+    <!-- Hostel and Mess Fee History -->
+    <div class="row g-3">
+
+        <!-- Hostel Fee History -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header fw-bold">
+                    Hostel Fee History
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th>Due</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Payment mode</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for p in hostel_fees %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ p.semester }}
+
+                                        <br>
+
+                                        <small class="text-muted">
+                                            {{ p.payment_method or 'Offline' }}
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        ₹{{ "%.2f"|format(p.amount_due) }}
+                                    </td>
+
+                                    <td>
+                                        ₹{{ "%.2f"|format(p.amount_paid) }}
+                                    </td>
+
+                                    <td>
+                                        ₹{{ "%.2f"|format(
+                                            p.amount_due - p.amount_paid
+                                        ) }}
+                                    </td>
+
+                                    <td>
+                                        {% if p.amount_due > p.amount_paid %}
+
+                                            <span class="badge bg-secondary">
+                                                Offline
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-success">
+                                                Paid
+                                            </span>
+
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if p.amount_due > p.amount_paid %}
+
+                                            <span class="small text-muted">
+                                                Contact hostel warden
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-success">
+                                                Completed
+                                            </span>
+
+                                        {% endif %}
+                                    </td>
+
+                                </tr>
+
+                            {% else %}
+
+                                <tr>
+                                    <td colspan="6"
+                                        class="text-muted text-center py-3">
+                                        No hostel fee records yet.
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- Mess Fee History -->
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header fw-bold">
+                    Mess Fee History
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Option / Period</th>
+                                <th>Due</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Payment mode</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for p in mess_fees %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ p.payment_option }}
+
+                                        <br>
+
+                                        {{ p.period_label }}
+
+                                        <br>
+
+                                        <small class="text-muted">
+                                            {{ p.payment_method or 'Offline' }}
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        ₹{{ "%.2f"|format(p.amount_due) }}
+                                    </td>
+
+                                    <td>
+                                        ₹{{ "%.2f"|format(p.amount_paid) }}
+                                    </td>
+
+                                    <td>
+                                        ₹{{ "%.2f"|format(
+                                            p.amount_due - p.amount_paid
+                                        ) }}
+                                    </td>
+
+                                    <td>
+                                        {% if p.amount_due > p.amount_paid %}
+
+                                            <span class="badge bg-secondary">
+                                                Offline
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-success">
+                                                Paid
+                                            </span>
+
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if p.amount_due > p.amount_paid %}
+
+                                            <span class="small text-muted">
+                                                Contact hostel warden
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-success">
+                                                Completed
+                                            </span>
+
+                                        {% endif %}
+                                    </td>
+
+                                </tr>
+
+                            {% else %}
+
+                                <tr>
+                                    <td colspan="6"
+                                        class="text-muted text-center py-3">
+                                        No mess fee records yet.
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

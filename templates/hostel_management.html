@@ -1,0 +1,838 @@
+{% extends "base.html" %}
+
+{% block title %}Rooms & Fees - GEC Hostel{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-building"></i> GEC Hostel Management
+            </h2>
+            <p class="text-muted mb-0">
+                Manage floors, rooms, student allocations, hostel rent and mess payments.
+            </p>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- Room Summary -->
+    <div class="row g-3 mb-4">
+        {% for h, stats in room_summary.items() %}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5>{{ h }} Hostel</h5>
+
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <strong class="fs-4">{{ stats.rooms }}</strong>
+                            <div class="small text-muted">Rooms</div>
+                        </div>
+
+                        <div class="col-4">
+                            <strong class="fs-4">{{ stats.occupied }}</strong>
+                            <div class="small text-muted">Occupied rooms</div>
+                        </div>
+
+                        <div class="col-4">
+                            <strong class="fs-4">{{ stats.available }}</strong>
+                            <div class="small text-muted">Rooms with beds</div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="small">
+                        Beds: {{ stats.occupied_beds }} occupied /
+                        {{ stats.beds }} total ·
+                        {{ stats.available_beds }} available
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Floor and Add Room -->
+    <div class="row g-3">
+
+        <!-- Add Floor -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header fw-bold">Add Floor</div>
+
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        <input type="hidden" name="action" value="add_floor">
+
+                        {% if not own_hostel %}
+                        <div class="col-md-6">
+                            <label class="form-label">Hostel</label>
+                            <select class="form-select" name="hostel_type" required>
+                                <option value="Boys">Boys</option>
+                                <option value="Girls">Girls</option>
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-6">
+                            <label class="form-label">Floor number</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                name="floor_number"
+                                min="1"
+                                max="100"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-12">
+                            <button class="btn btn-primary">Add Floor</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Room -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header fw-bold">Add Room</div>
+
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        <input type="hidden" name="action" value="add_room">
+
+                        {% if not own_hostel %}
+                        <div class="col-md-6">
+                            <label class="form-label">Hostel</label>
+                            <select class="form-select" name="hostel_type" required>
+                                <option value="Boys">Boys</option>
+                                <option value="Girls">Girls</option>
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-6">
+                            <label class="form-label">Floor</label>
+                            <select class="form-select" name="floor_id" required>
+                                <option value="">Select floor</option>
+                                {% for f in floors %}
+                                <option value="{{ f.id }}">
+                                    {{ f.hostel_type }} · Floor {{ f.floor_number }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Room number</label>
+                            <input
+                                class="form-control"
+                                name="room_number"
+                                placeholder="101"
+                                maxlength="20"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Room type</label>
+                            <select class="form-select" name="room_type" id="roomType" required>
+                                <option value="Attached">Attached washroom</option>
+                                <option value="Non-Attached">Non-attached washroom</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Capacity</label>
+                            <select class="form-select" name="capacity" id="roomCapacity" required>
+                                <option value="4">4 members</option>
+                                <option value="5">5 members</option>
+                                <option value="6">6 members</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Rent per semester</label>
+                            <input
+                                class="form-control"
+                                id="roomRent"
+                                value="₹18,000 per student"
+                                readonly
+                            >
+                        </div>
+
+                        <div class="col-12">
+                            <button class="btn btn-primary">Add Room</button>
+                        </div>
+                    </form>
+
+                    <small class="text-muted">
+                        Default rent: Attached ₹18,000; Non-attached ₹16,000
+                        per student per semester. Room numbers such as 101, 102
+                        can be entered manually.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Room Inventory -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header fw-bold">Room Inventory</div>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Floor</th>
+                        <th>Room</th>
+                        <th>Type</th>
+                        <th>Capacity</th>
+                        <th>Occupied</th>
+                        <th>Available beds</th>
+                        <th>Semester rent/student</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for r in rooms %}
+                    <tr>
+                        <td>{{ r.hostel_type }}</td>
+                        <td>{{ r.floor_number }}</td>
+                        <td>{{ r.room_number }}</td>
+                        <td>{{ r.room_type }}</td>
+                        <td>{{ r.capacity }}</td>
+                        <td>{{ r.occupied }}</td>
+                        <td>{{ r.available }}</td>
+                        <td>₹{{ "{:,.0f}".format(r.semester_rent) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            No rooms added yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Allocate Room -->
+    {% if role == 'warden' %}
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header fw-bold">
+            Allocate Room to Student (Warden only)
+        </div>
+
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                <input type="hidden" name="action" value="allocate">
+
+                <div class="col-md-6">
+                    <label class="form-label">Registered student</label>
+                    <select name="student_id" class="form-select" required>
+                        <option value="">Select student</option>
+                        {% for st in students %}
+                        <option value="{{ st.id }}">
+                            {{ st.name }} ({{ st.roll_number }})
+                            {% if st.room_preference %}
+                            · Preference: {{ st.room_preference }}
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Available room</label>
+                    <select name="room_id" class="form-select" required>
+                        <option value="">Select room</option>
+                        {% for r in rooms if r.available > 0 %}
+                        <option value="{{ r.id }}">
+                            {{ r.room_number }} · Floor {{ r.floor_number }}
+                            · {{ r.room_type }} · {{ r.available }} beds available
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Semester</label>
+                    <select name="semester" class="form-select" required>
+                        {% for n in range(1, 9) %}
+                        <option value="{{ n }}{{ 'st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th' }} Semester">
+                            {{ n }}{{ 'st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th' }} Semester
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-success">Allocate Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Active Room Allocations -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header fw-bold">Active Room Allocations</div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Roll number</th>
+                        <th>Hostel</th>
+                        <th>Floor</th>
+                        <th>Room</th>
+                        <th>Type</th>
+                        <th>Semester</th>
+                        <th>Update room for semester</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for a in allocations %}
+                    <tr>
+                        <td>{{ a.student_name }}</td>
+                        <td>{{ a.roll_number }}</td>
+                        <td>{{ a.hostel_type }}</td>
+                        <td>{{ a.floor_number }}</td>
+                        <td>{{ a.room_number }}</td>
+                        <td>{{ a.room_type }}</td>
+                        <td>{{ a.semester or '1st Semester' }}</td>
+
+                        <td>
+                            <form method="post" class="d-flex flex-column gap-1">
+                                <input type="hidden" name="action" value="change_room">
+                                <input type="hidden" name="student_id" value="{{ a.student_id }}">
+
+                                <select name="room_id" class="form-select form-select-sm" required>
+                                    <option value="">Select new room</option>
+                                    {% for r in rooms if r.hostel_type == a.hostel_type and (r.available > 0 or r.room_number == a.room_number) %}
+                                    <option value="{{ r.id }}">
+                                        {{ r.room_number }} · Floor {{ r.floor_number }} · {{ r.room_type }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+
+                                <select name="semester" class="form-select form-select-sm" required>
+                                    {% for n in range(1, 9) %}
+                                    {% set sem = n|string + ('st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th') + ' Semester' %}
+                                    <option value="{{ sem }}" {% if (a.semester or '1st Semester') == sem %}selected{% endif %}>
+                                        {{ sem }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+
+                                <button class="btn btn-sm btn-outline-primary">Update</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-muted text-center">
+                            No active allocations yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer small text-muted">
+            Changing a room closes the previous allocation and keeps it in history.
+        </div>
+    </div>
+
+    <!-- Hostel and Mess Payment Forms -->
+    <div class="row g-3 mt-1">
+
+        <!-- Record Hostel Payment -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header fw-bold">
+                    Record Offline Hostel Fee Payment
+                </div>
+
+                <div class="card-body pt-0">
+                    <small class="text-muted">
+                        Only record payments received offline. Online payments
+                        are recorded automatically in the student portal.
+                    </small>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" class="row g-2">
+                        <input type="hidden" name="action" value="record_hostel_payment">
+                        <input type="hidden" name="payment_method" value="Offline">
+
+                        <div class="col-12">
+                            <label class="form-label">Student</label>
+                            <select class="form-select" name="student_id"
+        id="hostelPaymentStudent" required>
+                                <option value="">Select student</option>
+                                {% for st in students %}
+                                <option value="{{ st.id }}">
+                                    {{ st.name }} ({{ st.roll_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Room (optional)</label>
+                            <select class="form-select" name="room_id" id="hostelPaymentRoom">
+                                <option value="" data-rent="">Not selected</option>
+                                {% for r in rooms %}
+                                <option value="{{ r.id }}" data-rent="{{ r.semester_rent }}">
+                                    {{ r.hostel_type }} · Room {{ r.room_number }}
+                                    · ₹{{ "%.0f"|format(r.semester_rent) }}/semester
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Semester</label>
+                            <select class="form-select" name="semester" id="hostelPaymentPeriod" required>
+                                {% for n in range(1, 9) %}
+                                <option value="{{ n }}{{ 'st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th' }} Semester">
+                                    {{ n }}{{ 'st' if n == 1 else 'nd' if n == 2 else 'rd' if n == 3 else 'th' }} Semester
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Total Fee / Amount Due (₹)</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                name="amount_due"
+                                id="hostelPaymentDue"
+                                min="0"
+                                step="0.01"
+                                placeholder="Remaining balance"
+                                required
+                                readonly
+                            >
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Amount paid (₹)</label>
+                            <input
+                                type="number"
+                                class="form-control"
+                                name="amount_paid"
+                                min="0"
+                                step="0.01"
+                                value="0"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Payment date</label>
+                            <input type="date" class="form-control" name="payment_date">
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Reference number</label>
+                            <input class="form-control" name="reference_number">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Note</label>
+                            <input class="form-control" name="note">
+                        </div>
+
+                        <div class="col-12">
+                            <button class="btn btn-primary">Save Hostel Payment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Record Mess Payment -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header fw-bold">Record Offline Mess Payment</div>
+
+                <div class="card-body pt-0">
+                    <small class="text-muted">
+                        Only record payments received offline. Online payments
+                        are recorded automatically in the student portal.
+                    </small>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" class="row g-2">
+                        <input type="hidden" name="action" value="record_mess_payment">
+                        <input type="hidden" name="payment_method" value="Offline">
+
+                        <div class="col-12">
+                            <label class="form-label">Student</label>
+                            <select class="form-select" name="student_id" required>
+                                <option value="">Select student</option>
+                                {% for st in students %}
+                                <option value="{{ st.id }}">
+                                    {{ st.name }} ({{ st.roll_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Payment option</label>
+                            <select class="form-select" name="payment_option" id="messOption" required>
+                                <option value="Daily">Daily (₹100/day)</option>
+                                <option value="Monthly">Monthly (₹31,000/month)</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Period</label>
+                            <input
+                                class="form-control"
+                                name="period_label"
+                                id="messPeriod"
+                                placeholder="e.g. October 2026 / 5 days"
+                                required
+                            >
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Amount due (₹)</label>
+                            <input type="number" class="form-control" name="amount_due" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Amount paid (₹)</label>
+                            <input type="number" class="form-control" name="amount_paid" min="0" step="0.01" value="0" required>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Payment date</label>
+                            <input type="date" class="form-control" name="payment_date">
+                        </div>
+
+                        <div class="col-6">
+                            <label class="form-label">Reference number</label>
+                            <input class="form-control" name="reference_number">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Note</label>
+                            <input class="form-control" name="note">
+                        </div>
+
+                        <div class="col-12">
+                            <button class="btn btn-primary">Save Mess Payment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Payment Records -->
+    <div class="row g-3 mt-1">
+
+        <!-- Hostel Payment Records -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header fw-bold">Hostel Payment Records</div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Period</th>
+                                <th>Total Fee</th>
+                                <th>Paid</th>
+                                <th>Remaining Due</th>
+                                <th>Method</th>
+                                <th>Payment ID / Ref</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for p in fee_rows %}
+                            <tr>
+                                <td>
+                                    {{ p.name }}<br>
+                                    <small>{{ p.roll_number }}</small>
+                                </td>
+
+                                <td>{{ p.semester }}</td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format(p.amount_due) }}
+                                </td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format(p.amount_paid) }}
+                                </td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format([0, p.amount_due - p.amount_paid]|max) }}
+                                </td>
+
+                                <td>{{ p.payment_method or 'Offline' }}</td>
+
+                                <td>{{ p.reference_number or '—' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-muted text-center">
+                                    No payments recorded.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mess Payment Records -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-header fw-bold">Mess Payment Records</div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Option</th>
+                                <th>Period</th>
+                                <th>Total Fee</th>
+                                <th>Paid</th>
+                                <th>Remaining Due</th>
+                                <th>Method</th>
+                                <th>Payment ID / Ref</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for p in mess_rows %}
+                            <tr>
+                                <td>
+                                    {{ p.name }}<br>
+                                    <small>{{ p.roll_number }}</small>
+                                </td>
+
+                                <td>{{ p.payment_option }}</td>
+
+                                <td>{{ p.period_label }}</td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format(p.amount_due) }}
+                                </td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format(p.amount_paid) }}
+                                </td>
+
+                                <td>
+                                    ₹{{ "%.2f"|format([0, p.amount_due - p.amount_paid]|max) }}
+                                </td>
+
+                                <td>{{ p.payment_method or 'Offline' }}</td>
+
+                                <td>{{ p.reference_number or '—' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-muted text-center">
+                                    No mess payments recorded.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+(function () {
+
+    // Room type and semester rent
+    const type = document.getElementById('roomType');
+    const cap = document.getElementById('roomCapacity');
+    const rent = document.getElementById('roomRent');
+
+    function updateRoomRent() {
+        if (!type || !cap || !rent) return;
+
+        if (type.value === 'Attached') {
+            cap.value = '4';
+            rent.value = '₹18,000 per student';
+        } else {
+            if (cap.value === '4') {
+                cap.value = '5';
+            }
+            rent.value = '₹16,000 per student';
+        }
+    }
+
+    if (type) {
+        type.addEventListener('change', updateRoomRent);
+        updateRoomRent();
+    }
+
+    // Hostel fee outstanding balance
+const hostelStudent = document.getElementById('hostelPaymentStudent');
+const hostelRoom = document.getElementById('hostelPaymentRoom');
+const hostelDue = document.getElementById('hostelPaymentDue');
+const hostelPaid = document.getElementById('hostelAmountPaid');
+const hostelRemaining = document.getElementById('hostelRemainingDue');
+const hostelPeriod = document.getElementById('hostelPaymentPeriod');
+
+async function loadHostelBalance() {
+    if (!hostelStudent || !hostelDue || !hostelPeriod) return;
+
+    const studentId = hostelStudent.value;
+    const semester = hostelPeriod.value;
+
+    if (!studentId || !semester) {
+        hostelDue.value = '';
+        updateHostelRemaining();
+        return;
+    }
+
+    hostelDue.value = '';
+    hostelDue.placeholder = 'Loading balance...';
+
+    try {
+        const response = await fetch(
+            `/hostel-fee-balance?student_id=${encodeURIComponent(studentId)}&semester=${encodeURIComponent(semester)}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Unable to load balance');
+        }
+
+        hostelDue.value = Number(data.balance || 0).toFixed(2);
+
+        if (hostelRoom && data.room_id) {
+            hostelRoom.value = String(data.room_id);
+        }
+
+        updateHostelRemaining();
+
+    } catch (error) {
+        hostelDue.value = '';
+        console.error('Hostel balance error:', error);
+
+        if (hostelRemaining) {
+            hostelRemaining.value = 'Unable to load balance';
+        }
+
+    } finally {
+        hostelDue.placeholder = 'Remaining balance';
+    }
+}
+
+function updateHostelRemaining() {
+    if (!hostelDue || !hostelPaid || !hostelRemaining) return;
+
+    const balance = Number(hostelDue.value) || 0;
+    const paid = Number(hostelPaid.value) || 0;
+
+    hostelRemaining.value =
+        '₹' + Math.max(0, balance - paid).toFixed(2);
+
+    hostelPaid.setCustomValidity(
+        paid > balance
+            ? 'Amount paid cannot exceed the outstanding balance.'
+            : ''
+    );
+}
+
+if (hostelStudent) {
+    hostelStudent.addEventListener('change', loadHostelBalance);
+}
+
+if (hostelPeriod) {
+    hostelPeriod.addEventListener('change', loadHostelBalance);
+}
+
+if (hostelPaid) {
+    hostelPaid.addEventListener('input', updateHostelRemaining);
+}
+
+    // Mess payment defaults
+    const messOption = document.getElementById('messOption');
+
+    if (messOption) {
+        const form = messOption.closest('form');
+        const due = form && form.querySelector('[name="amount_due"]');
+        const period = form && form.querySelector('[name="period_label"]');
+
+        function setMessDefaults() {
+            if (due && (messOption.value === 'Daily' || messOption.value === 'Monthly')) {
+                due.value = messOption.value === 'Daily' ? '100' : '31000';
+            } else if (due && messOption.value === 'Other') {
+                due.value = '';
+            }
+
+            if (period) {
+                const d = new Date();
+
+                if (messOption.value === 'Monthly') {
+                    period.value = d.toLocaleString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                } else if (messOption.value === 'Daily') {
+                    period.value =
+                        d.getFullYear() + '-' +
+                        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(d.getDate()).padStart(2, '0');
+                } else {
+                    period.value = '';
+                }
+            }
+        }
+
+        messOption.addEventListener('change', setMessDefaults);
+        setMessDefaults();
+    }
+
+})();
+</script>
+
+{% endblock %}
