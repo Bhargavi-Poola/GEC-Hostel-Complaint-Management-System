@@ -279,26 +279,74 @@ label{
     border-radius:20px;
 }
 
-/* ===========================
-   RESPONSIVE
-=========================== */
+/* MOBILE RESPONSIVE FIX */
+@media screen and (max-width: 768px) {
 
-@media(max-width:768px){
-
-    .hero-section{
-        text-align:center;
+    html, body {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        overflow-x: hidden;
     }
 
-    .table{
-        font-size:14px;
+    *, *::before, *::after {
+        box-sizing: border-box;
     }
 
-    .navbar-brand{
-        font-size:18px;
+    img {
+        max-width: 100%;
+        height: auto;
     }
 
-    .hero-section h1{
-        font-size:32px;
+    main {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
     }
 
+    .container {
+        width: 100%;
+        max-width: 100%;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .row {
+        --bs-gutter-x: 1rem;
+    }
+
+    .hero-section {
+        width: 100%;
+        text-align: center;
+        padding: 35px 0 !important;
+    }
+
+    .hero-section h1 {
+        font-size: clamp(26px, 7vw, 34px);
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .hero-icon-card {
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .card {
+        max-width: 100%;
+    }
+
+    .table-responsive {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .navbar-brand {
+        font-size: 18px;
+    }
+
+    .btn {
+        max-width: 100%;
+        white-space: normal;
+    }
 }
