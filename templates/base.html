@@ -27,6 +27,64 @@
           href="{{ url_for('static', filename='css/style.css') }}">
 
     {% block extra_css %}{% endblock %}
+    <style>
+/* Mobile responsive design for GEC Hostel */
+@media screen and (max-width: 768px) {
+
+    html, body {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    .hero-section {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 35px 0 !important;
+    }
+
+    .hero-section .container {
+        width: 100%;
+        max-width: 100%;
+        padding-left: 16px;
+        padding-right: 16px;
+        box-sizing: border-box;
+    }
+
+    .hero-section h1 {
+        font-size: clamp(28px, 7vw, 36px);
+        line-height: 1.2;
+        overflow-wrap: break-word;
+    }
+
+    .hero-section p {
+        font-size: 17px;
+        line-height: 1.5;
+    }
+
+    .hero-section .d-flex {
+        gap: 10px !important;
+    }
+
+    .hero-section .btn {
+        max-width: 100%;
+        white-space: normal;
+        box-sizing: border-box;
+    }
+
+    .hero-icon-card {
+        margin-top: 20px;
+    }
+
+    section:not(.hero-section) .container {
+        padding-left: 16px;
+        padding-right: 16px;
+        box-sizing: border-box;
+    }
+}
+</style>
 
 </head>
 
